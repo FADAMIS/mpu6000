@@ -165,10 +165,16 @@ impl<E, BUS: RegAccess<Error = E>> MPU6000<BUS> {
     }
 
     pub fn read_gyro(&mut self) -> Result<Gyro, E> {
-        let mut buffer = [0u8; 6];
-        self.bus.reads(Register::GyroXHigh, &mut buffer)?;
-        Ok((&buffer).into())
-    }
+    let mut buffer = [0u8; 6]; // read raw bytes
+    self.bus.reads(Register::GyroXHigh, &mut buffer)?;
+    let gyro_values = [
+        i16::from_be_bytes([buffer[0], buffer[1]]),
+        i16::from_be_bytes([buffer[2], buffer[3]]),
+        i16::from_be_bytes([buffer[4], buffer[5]]),
+    ];
+    Ok(Gyro(gyro_values)) // return the correct type
+}
+
 
     pub fn read_temperature(&mut self) -> Result<Temperature, E> {
         let mut buffer = [0u8; 2];
